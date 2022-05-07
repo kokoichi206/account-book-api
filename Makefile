@@ -15,10 +15,13 @@ migrateup:
 migratedown:
 	migrate -path db/migration -database "$(DB_URL)" -verbose down
 
+sqlc:
+	sqlc generate
+
 test:
 	go test -v -cover ./...
 
 server:
 	go run main.go
 
-.PHONY: test server
+.PHONY: test server sqlc
