@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/kokoichi206/account-book-api/util"
+	_ "github.com/lib/pq"
 )
 
 // テスト用のクエリ。

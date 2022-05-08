@@ -69,12 +69,12 @@ type Transfer struct {
 }
 
 type User struct {
-	ID                int64          `json:"id"`
-	Name              sql.NullString `json:"name"`
-	Password          string         `json:"password"`
-	Email             string         `json:"email"`
-	Age               int32          `json:"age"`
-	Balance           int64          `json:"balance"`
-	PasswordChangedAt time.Time      `json:"password_changed_at"`
-	CreatedAt         time.Time      `json:"created_at"`
+	ID                int64     `json:"id"`
+	Name              string    `json:"name"`
+	Password          string    `json:"password"`
+	Email             string    `json:"email"`
+	Age               int32     `json:"age"`
+	Balance           int64     `json:"balance"`
+	PasswordChangedAt time.Time `json:"password_changed_at"`
+	CreatedAt         time.Time `json:"created_at"`
 }
