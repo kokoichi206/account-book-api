@@ -24,4 +24,7 @@ test:
 server:
 	go run main.go
 
-.PHONY: test server sqlc
+mock:
+	mockgen -package mockdb -destination db/mock/querier.go github.com/kokoichi206/account-book-api/db/sqlc Querier
+
+.PHONY: test server sqlc mock
