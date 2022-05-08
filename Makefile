@@ -15,10 +15,16 @@ migrateup:
 migratedown:
 	migrate -path db/migration -database "$(DB_URL)" -verbose down
 
+sqlc:
+	sqlc generate
+
 test:
 	go test -v -cover ./...
 
 server:
 	go run main.go
 
-.PHONY: test server
+mock:
+	mockgen -package mockdb -destination db/mock/querier.go github.com/kokoichi206/account-book-api/db/sqlc Querier
+
+.PHONY: test server sqlc mock
