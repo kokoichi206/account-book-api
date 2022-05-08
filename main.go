@@ -1,15 +1,30 @@
 package main
 
 import (
-	"net/http"
+	"database/sql"
+	"log"
 
-	"github.com/gin-gonic/gin"
+	"github.com/kokoichi206/account-book-api/api"
+	db "github.com/kokoichi206/account-book-api/db/sqlc"
+	"github.com/kokoichi206/account-book-api/util"
 )
 
 func main() {
-	r := gin.Default()
-	r.GET("/", func(c *gin.Context) {
-		c.JSON(http.StatusOK, map[string]string{"greeting": "hello world"})
-	})
-	r.Run(":11111")
+	config, err := util.LoadConfig("e")
+	if err != nil {
+		log.Fatal("cannot load config:", err)
+	}
+
+	conn, err := sql.Open(config.DBDriver, config.DBSource)
+	if err != nil {
+		log.Fatal("Cannot connect to db: ", err)
+	}
+
+	querier := db.New(conn)
+	server := api.NewServer(config, querier)
+
+	err = server.Start(config.ServerAddress)
+	if err != nil {
+		log.Fatal("cannot start server:", err)
+	}
 }
