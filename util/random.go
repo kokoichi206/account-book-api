@@ -38,6 +38,12 @@ func RandomUserName() string {
 	return RandomString(7)
 }
 
+// ランダムなパスワードを取得する。
+// 12文字からなるランダムな文字列を返す。
+func RandomPassword() string {
+	return RandomString(12)
+}
+
 // ランダムなメールアドレスを取得する。
 // メールアドレスの形式に則った文字列を返す。
 func RandomEmail() string {

@@ -21,6 +21,7 @@ type createUserRequest struct {
 
 // 新規ユーザー作成用のpayload。
 type userResponse struct {
+	Id                int       `json:"id"`
 	Name              string    `json:"username"`
 	Email             string    `json:"email"`
 	Age               int32     `json:"age"`
@@ -108,5 +109,5 @@ func (server *Server) loginUser(c *gin.Context) {
 		PasswordChangedAt: user.PasswordChangedAt,
 		CreatedAt:         user.CreatedAt,
 	}
-	c.JSON(http.StatusCreated, res)
+	c.JSON(http.StatusOK, res)
 }
