@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"database/sql"
 	"testing"
 	"time"
 
@@ -108,4 +109,6 @@ func TestGetUserWithNotExist(t *testing.T) {
 	// Assert
 	require.Error(t, err)
 	require.Empty(t, user2)
+
+	require.Equal(t, err, sql.ErrNoRows)
 }

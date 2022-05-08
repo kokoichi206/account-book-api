@@ -29,6 +29,9 @@ func NewServer(config util.Config, querier db.Querier) *Server {
 func (server *Server) setupRouter() {
 	router := gin.Default()
 
+	router.POST("/users", server.createUser)
+	router.POST("/login", server.loginUser)
+
 	server.router = router
 }
 
