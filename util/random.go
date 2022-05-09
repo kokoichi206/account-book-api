@@ -61,3 +61,33 @@ func RandomAge() int32 {
 func RandomBalance() int64 {
 	return RandomInt(0, 1_0000_0000)
 }
+
+// ランダムな店名を取得する。
+// 9文字からなるランダムな文字列を返す。
+func RandomStoreName() string {
+	return RandomString(9)
+}
+
+// ランダムな食品名を取得する。
+// 6文字からなるランダムな文字列を返す。
+func RandomFoodName() string {
+	return RandomString(6)
+}
+
+// ランダムなカロリーを取得する。
+// 0.0-700.0までのランダムな浮動小数点を返す。
+func RandomCalories() float32 {
+	return float32(RandomInt(0, 7000) / 10)
+}
+
+// ランダムな各栄養素の値（g）を取得する。
+// 0.0-70.0までのランダムな浮動小数点を返す。
+func RandomNutrient() float32 {
+	return float32(RandomInt(0, 700) / 10)
+}
+
+// ランダムな食品の個数を取得する。
+// 1-3までのランダムな浮動小数点を返す。
+func RandomAmount() int64 {
+	return RandomInt(1,3)
+}

@@ -33,7 +33,7 @@ type FoodContent struct {
 	Calories     float32 `json:"calories"`
 	Lipid        float32 `json:"lipid"`
 	Carbohydrate float32 `json:"carbohydrate"`
-	Protein      float32 `json:"Protein"`
+	Protein      float32 `json:"protein"`
 }
 
 type FoodReceipt struct {
