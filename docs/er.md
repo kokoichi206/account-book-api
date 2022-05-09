@@ -1,6 +1,6 @@
 # ER 図
 
-``` mermaid
+```mermaid
 erDiagram
 
 users ||--o{ expenses: "go to"
@@ -9,7 +9,7 @@ users {
 	bigint id PK
 	string name
 	string password
-	string email 
+	string email
 	int age
 	bigint balance
 	timestamp password_changed_at
@@ -64,7 +64,7 @@ food_contents {
 	string calories
 	float4 lipid
 	float4 carbohydrate
-	float4 Protein
+	float4 protein
 }
 
 transfers }o--||users : do

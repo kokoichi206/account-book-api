@@ -45,7 +45,7 @@ CREATE TABLE "food_contents" (
 	"calories" float4 NOT NULL,
 	"lipid" float4 NOT NULL,
 	"carbohydrate" float4 NOT NULL,
-	"Protein" float4 NOT NULL
+	"protein" float4 NOT NULL
 );
 
 CREATE TABLE "food_receipt_contents" (
