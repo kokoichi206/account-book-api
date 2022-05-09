@@ -35,6 +35,51 @@ func (m *MockQuerier) EXPECT() *MockQuerierMockRecorder {
 	return m.recorder
 }
 
+// CreateFoodContent mocks base method.
+func (m *MockQuerier) CreateFoodContent(arg0 context.Context, arg1 db.CreateFoodContentParams) (db.FoodContent, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateFoodContent", arg0, arg1)
+	ret0, _ := ret[0].(db.FoodContent)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateFoodContent indicates an expected call of CreateFoodContent.
+func (mr *MockQuerierMockRecorder) CreateFoodContent(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateFoodContent", reflect.TypeOf((*MockQuerier)(nil).CreateFoodContent), arg0, arg1)
+}
+
+// CreateFoodReceipt mocks base method.
+func (m *MockQuerier) CreateFoodReceipt(arg0 context.Context, arg1 string) (db.FoodReceipt, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateFoodReceipt", arg0, arg1)
+	ret0, _ := ret[0].(db.FoodReceipt)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateFoodReceipt indicates an expected call of CreateFoodReceipt.
+func (mr *MockQuerierMockRecorder) CreateFoodReceipt(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateFoodReceipt", reflect.TypeOf((*MockQuerier)(nil).CreateFoodReceipt), arg0, arg1)
+}
+
+// CreateFoodReceiptContent mocks base method.
+func (m *MockQuerier) CreateFoodReceiptContent(arg0 context.Context, arg1 db.CreateFoodReceiptContentParams) (db.FoodReceiptContent, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateFoodReceiptContent", arg0, arg1)
+	ret0, _ := ret[0].(db.FoodReceiptContent)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateFoodReceiptContent indicates an expected call of CreateFoodReceiptContent.
+func (mr *MockQuerierMockRecorder) CreateFoodReceiptContent(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateFoodReceiptContent", reflect.TypeOf((*MockQuerier)(nil).CreateFoodReceiptContent), arg0, arg1)
+}
+
 // CreateUser mocks base method.
 func (m *MockQuerier) CreateUser(arg0 context.Context, arg1 db.CreateUserParams) (db.User, error) {
 	m.ctrl.T.Helper()
@@ -50,6 +95,36 @@ func (mr *MockQuerierMockRecorder) CreateUser(arg0, arg1 interface{}) *gomock.Ca
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUser", reflect.TypeOf((*MockQuerier)(nil).CreateUser), arg0, arg1)
 }
 
+// GetFoodContent mocks base method.
+func (m *MockQuerier) GetFoodContent(arg0 context.Context, arg1 int64) (db.FoodContent, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetFoodContent", arg0, arg1)
+	ret0, _ := ret[0].(db.FoodContent)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetFoodContent indicates an expected call of GetFoodContent.
+func (mr *MockQuerierMockRecorder) GetFoodContent(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFoodContent", reflect.TypeOf((*MockQuerier)(nil).GetFoodContent), arg0, arg1)
+}
+
+// GetFoodReceipt mocks base method.
+func (m *MockQuerier) GetFoodReceipt(arg0 context.Context, arg1 int64) (db.FoodReceipt, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetFoodReceipt", arg0, arg1)
+	ret0, _ := ret[0].(db.FoodReceipt)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetFoodReceipt indicates an expected call of GetFoodReceipt.
+func (mr *MockQuerierMockRecorder) GetFoodReceipt(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFoodReceipt", reflect.TypeOf((*MockQuerier)(nil).GetFoodReceipt), arg0, arg1)
+}
+
 // GetUser mocks base method.
 func (m *MockQuerier) GetUser(arg0 context.Context, arg1 string) (db.User, error) {
 	m.ctrl.T.Helper()
@@ -63,4 +138,19 @@ func (m *MockQuerier) GetUser(arg0 context.Context, arg1 string) (db.User, error
 func (mr *MockQuerierMockRecorder) GetUser(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUser", reflect.TypeOf((*MockQuerier)(nil).GetUser), arg0, arg1)
+}
+
+// ListFoodReceiptContents mocks base method.
+func (m *MockQuerier) ListFoodReceiptContents(arg0 context.Context, arg1 int64) ([]db.ListFoodReceiptContentsRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListFoodReceiptContents", arg0, arg1)
+	ret0, _ := ret[0].([]db.ListFoodReceiptContentsRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListFoodReceiptContents indicates an expected call of ListFoodReceiptContents.
+func (mr *MockQuerierMockRecorder) ListFoodReceiptContents(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListFoodReceiptContents", reflect.TypeOf((*MockQuerier)(nil).ListFoodReceiptContents), arg0, arg1)
 }
