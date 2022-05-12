@@ -7,10 +7,12 @@ import (
 	"github.com/kokoichi206/account-book-api/api"
 	db "github.com/kokoichi206/account-book-api/db/sqlc"
 	"github.com/kokoichi206/account-book-api/util"
+
+	_ "github.com/lib/pq"
 )
 
 func main() {
-	config, err := util.LoadConfig("e")
+	config, err := util.LoadConfig(".")
 	if err != nil {
 		log.Fatal("cannot load config:", err)
 	}
