@@ -21,6 +21,10 @@ func RandomInt(min, max int64) int64 {
 	return min + rand.Int63n(max-min+1)
 }
 
+func RandomID() int64 {
+	return RandomInt(1, 1_000_000)
+}
+
 // n 文字のランダムな文字列を取得する。
 // 文字列は全てアルファベットのみで構成される。
 func RandomString(n int) string {
@@ -89,5 +93,11 @@ func RandomNutrient() float32 {
 // ランダムな食品の個数を取得する。
 // 1-3までのランダムな浮動小数点を返す。
 func RandomAmount() int64 {
-	return RandomInt(1,3)
+	return RandomInt(1, 3)
+}
+
+// ランダムな支出額を取得する。
+// 100-30000までのランダムな整数値を返す。
+func RandomExpense() int64 {
+	return RandomInt(100, 3_0000)
 }
