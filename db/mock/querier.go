@@ -35,6 +35,36 @@ func (m *MockQuerier) EXPECT() *MockQuerierMockRecorder {
 	return m.recorder
 }
 
+// CreateCategory mocks base method.
+func (m *MockQuerier) CreateCategory(arg0 context.Context, arg1 string) (db.Category, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateCategory", arg0, arg1)
+	ret0, _ := ret[0].(db.Category)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateCategory indicates an expected call of CreateCategory.
+func (mr *MockQuerierMockRecorder) CreateCategory(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateCategory", reflect.TypeOf((*MockQuerier)(nil).CreateCategory), arg0, arg1)
+}
+
+// CreateExpense mocks base method.
+func (m *MockQuerier) CreateExpense(arg0 context.Context, arg1 db.CreateExpenseParams) (db.Expense, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateExpense", arg0, arg1)
+	ret0, _ := ret[0].(db.Expense)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateExpense indicates an expected call of CreateExpense.
+func (mr *MockQuerierMockRecorder) CreateExpense(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateExpense", reflect.TypeOf((*MockQuerier)(nil).CreateExpense), arg0, arg1)
+}
+
 // CreateFoodContent mocks base method.
 func (m *MockQuerier) CreateFoodContent(arg0 context.Context, arg1 db.CreateFoodContentParams) (db.FoodContent, error) {
 	m.ctrl.T.Helper()
@@ -138,6 +168,21 @@ func (m *MockQuerier) GetUser(arg0 context.Context, arg1 string) (db.User, error
 func (mr *MockQuerierMockRecorder) GetUser(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUser", reflect.TypeOf((*MockQuerier)(nil).GetUser), arg0, arg1)
+}
+
+// ListExpenses mocks base method.
+func (m *MockQuerier) ListExpenses(arg0 context.Context, arg1 int64) ([]db.ListExpensesRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListExpenses", arg0, arg1)
+	ret0, _ := ret[0].([]db.ListExpensesRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListExpenses indicates an expected call of ListExpenses.
+func (mr *MockQuerierMockRecorder) ListExpenses(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListExpenses", reflect.TypeOf((*MockQuerier)(nil).ListExpenses), arg0, arg1)
 }
 
 // ListFoodReceiptContents mocks base method.

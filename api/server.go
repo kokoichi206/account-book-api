@@ -33,6 +33,8 @@ func (server *Server) setupRouter() {
 	router.POST("/login", server.loginUser)
 
 	router.POST("/receipts", server.createReceipt)
+	router.GET("/expenses", server.getAllExpenses)
+	router.POST("/expenses", server.createExpense)
 
 	server.router = router
 }
