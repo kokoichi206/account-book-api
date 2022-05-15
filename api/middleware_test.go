@@ -26,6 +26,13 @@ func addAuthorization(
 	request.Header.Set("Cookie", cookie)
 }
 
+func addCompleteAuth(t *testing.T, request *http.Request, manager *auth.MockUuidSessionManager) {
+	session := uuid.New()
+	addAuthorization(t, request, session.String())
+	manager.Verify = true
+	manager.VerifyError = nil
+}
+
 func TestAuthMiddleware(t *testing.T) {
 
 	testCases := []struct {

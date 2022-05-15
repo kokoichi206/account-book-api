@@ -13,6 +13,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
+	"github.com/kokoichi206/account-book-api/auth"
 	mockdb "github.com/kokoichi206/account-book-api/db/mock"
 	db "github.com/kokoichi206/account-book-api/db/sqlc"
 	"github.com/kokoichi206/account-book-api/util"
@@ -52,12 +53,16 @@ func TestCreateExpense(t *testing.T) {
 	testCases := []struct {
 		name          string
 		body          gin.H
+		setupAuth     func(t *testing.T, request *http.Request, manager *auth.MockUuidSessionManager)
 		buildStubs    func(querier *mockdb.MockQuerier)
 		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)
 	}{
 		{
 			name: "OK",
 			body: correctBody,
+			setupAuth: func(t *testing.T, request *http.Request, manager *auth.MockUuidSessionManager) {
+				addCompleteAuth(t, request, manager)
+			},
 			buildStubs: func(querier *mockdb.MockQuerier) {
 				querier.EXPECT().
 					CreateExpense(gomock.Any(), gomock.Any()).
@@ -72,6 +77,9 @@ func TestCreateExpense(t *testing.T) {
 		{
 			name: "BindRequestErrorWithMissingParam",
 			body: missingBody,
+			setupAuth: func(t *testing.T, request *http.Request, manager *auth.MockUuidSessionManager) {
+				addCompleteAuth(t, request, manager)
+			},
 			buildStubs: func(querier *mockdb.MockQuerier) {
 				querier.EXPECT().
 					CreateExpense(gomock.Any(), gomock.Any()).
@@ -84,6 +92,9 @@ func TestCreateExpense(t *testing.T) {
 		{
 			name: "CreateExpenseDBError",
 			body: correctBody,
+			setupAuth: func(t *testing.T, request *http.Request, manager *auth.MockUuidSessionManager) {
+				addCompleteAuth(t, request, manager)
+			},
 			buildStubs: func(querier *mockdb.MockQuerier) {
 				querier.EXPECT().
 					CreateExpense(gomock.Any(), gomock.Any()).
@@ -106,8 +117,9 @@ func TestCreateExpense(t *testing.T) {
 
 			querier := mockdb.NewMockQuerier(ctrl)
 			tc.buildStubs(querier)
+			manager := auth.NewMockManager(querier)
 
-			server := NewServer(util.Config{}, querier, nil)
+			server := NewServer(util.Config{}, querier, manager)
 			recorder := httptest.NewRecorder()
 
 			data, err := json.Marshal(tc.body)
@@ -115,6 +127,7 @@ func TestCreateExpense(t *testing.T) {
 
 			request, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
 			require.NoError(t, err)
+			tc.setupAuth(t, request, manager)
 
 			// Act
 			server.router.ServeHTTP(recorder, request)
@@ -181,12 +194,16 @@ func TestGetAllExpenses(t *testing.T) {
 	testCases := []struct {
 		name          string
 		url           string
+		setupAuth     func(t *testing.T, request *http.Request, manager *auth.MockUuidSessionManager)
 		buildStubs    func(querier *mockdb.MockQuerier)
 		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)
 	}{
 		{
 			name: "OK",
 			url:  fmt.Sprintf("/expenses?user_id=%d", userId),
+			setupAuth: func(t *testing.T, request *http.Request, manager *auth.MockUuidSessionManager) {
+				addCompleteAuth(t, request, manager)
+			},
 			buildStubs: func(querier *mockdb.MockQuerier) {
 				querier.EXPECT().
 					ListExpenses(gomock.Any(), gomock.Any()).
@@ -201,6 +218,9 @@ func TestGetAllExpenses(t *testing.T) {
 		{
 			name: "OKWithoutComment",
 			url:  fmt.Sprintf("/expenses?user_id=%d", userId),
+			setupAuth: func(t *testing.T, request *http.Request, manager *auth.MockUuidSessionManager) {
+				addCompleteAuth(t, request, manager)
+			},
 			buildStubs: func(querier *mockdb.MockQuerier) {
 				querier.EXPECT().
 					ListExpenses(gomock.Any(), gomock.Any()).
@@ -213,8 +233,25 @@ func TestGetAllExpenses(t *testing.T) {
 			},
 		},
 		{
+			name: "NotAuthSetup",
+			url:  fmt.Sprintf("/expenses?user_id=%d", userId),
+			setupAuth: func(t *testing.T, request *http.Request, manager *auth.MockUuidSessionManager) {
+			},
+			buildStubs: func(querier *mockdb.MockQuerier) {
+				querier.EXPECT().
+					ListExpenses(gomock.Any(), gomock.Any()).
+					Times(0)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			},
+		},
+		{
 			name: "BindRequestErrorWithMissingParam",
 			url:  fmt.Sprintf("/expenses"),
+			setupAuth: func(t *testing.T, request *http.Request, manager *auth.MockUuidSessionManager) {
+				addCompleteAuth(t, request, manager)
+			},
 			buildStubs: func(querier *mockdb.MockQuerier) {
 				querier.EXPECT().
 					ListExpenses(gomock.Any(), gomock.Any()).
@@ -227,6 +264,9 @@ func TestGetAllExpenses(t *testing.T) {
 		{
 			name: "ListExpenseDBError",
 			url:  fmt.Sprintf("/expenses?user_id=%d", userId),
+			setupAuth: func(t *testing.T, request *http.Request, manager *auth.MockUuidSessionManager) {
+				addCompleteAuth(t, request, manager)
+			},
 			buildStubs: func(querier *mockdb.MockQuerier) {
 				querier.EXPECT().
 					ListExpenses(gomock.Any(), gomock.Any()).
@@ -249,11 +289,13 @@ func TestGetAllExpenses(t *testing.T) {
 
 			querier := mockdb.NewMockQuerier(ctrl)
 			tc.buildStubs(querier)
+			manager := auth.NewMockManager(querier)
 
-			server := NewServer(util.Config{}, querier, nil)
+			server := NewServer(util.Config{}, querier, manager)
 			recorder := httptest.NewRecorder()
 			request, err := http.NewRequest(http.MethodGet, tc.url, nil)
 			require.NoError(t, err)
+			tc.setupAuth(t, request, manager)
 
 			// Act
 			server.router.ServeHTTP(recorder, request)
