@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -12,11 +13,31 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
+	"github.com/google/uuid"
+	"github.com/kokoichi206/account-book-api/auth"
 	mockdb "github.com/kokoichi206/account-book-api/db/mock"
 	db "github.com/kokoichi206/account-book-api/db/sqlc"
 	"github.com/kokoichi206/account-book-api/util"
 	"github.com/stretchr/testify/require"
 )
+
+func addAuthMock(manager auth.MockUuidSessionManager, querier *mockdb.MockQuerier, userID int64) {
+	uuid := uuid.New()
+	manager.Uuid = uuid
+	manager.CreateUUIDError = nil
+
+	querier.EXPECT().
+		CreateSession(gomock.Any(), gomock.Any()).
+		Times(1).
+		Return(db.Session{
+			ID:        uuid,
+			UserID:    userID,
+			UserAgent: "MacOS",
+			ClientIp:  util.RandomIPAddress(),
+			CreatedAt: time.Now(),
+			ExpiresAt: time.Now().Add(30 * time.Minute),
+		}, nil)
+}
 
 func TestCreateUser(t *testing.T) {
 
@@ -49,17 +70,19 @@ func TestCreateUser(t *testing.T) {
 	testCases := []struct {
 		name          string
 		body          gin.H
-		buildStubs    func(querier *mockdb.MockQuerier)
+		buildStubs    func(querier *mockdb.MockQuerier, manager *auth.MockUuidSessionManager)
 		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)
 	}{
 		{
 			name: "OK",
 			body: correctBody,
-			buildStubs: func(querier *mockdb.MockQuerier) {
+			buildStubs: func(querier *mockdb.MockQuerier, manager *auth.MockUuidSessionManager) {
 				querier.EXPECT().
 					CreateUser(gomock.Any(), gomock.Any()).
 					Times(1).
 					Return(correctUser, nil)
+
+				addAuthMock(*manager, querier, correctUser.ID)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusCreated, recorder.Code)
@@ -74,7 +97,7 @@ func TestCreateUser(t *testing.T) {
 				"age":      age,
 				"balance":  balance,
 			},
-			buildStubs: func(querier *mockdb.MockQuerier) {
+			buildStubs: func(querier *mockdb.MockQuerier, manager *auth.MockUuidSessionManager) {
 				querier.EXPECT().
 					CreateUser(gomock.Any(), gomock.Any()).
 					Times(0)
@@ -92,10 +115,11 @@ func TestCreateUser(t *testing.T) {
 				"age":      age,
 				"balance":  balance,
 			},
-			buildStubs: func(querier *mockdb.MockQuerier) {
+			buildStubs: func(querier *mockdb.MockQuerier, manager *auth.MockUuidSessionManager) {
 				querier.EXPECT().
 					CreateUser(gomock.Any(), gomock.Any()).
 					Times(0)
+
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusBadRequest, recorder.Code)
@@ -104,11 +128,52 @@ func TestCreateUser(t *testing.T) {
 		{
 			name: "DBError",
 			body: correctBody,
-			buildStubs: func(querier *mockdb.MockQuerier) {
+			buildStubs: func(querier *mockdb.MockQuerier, manager *auth.MockUuidSessionManager) {
 				querier.EXPECT().
 					CreateUser(gomock.Any(), gomock.Any()).
 					Times(1).
 					Return(db.User{}, sql.ErrConnDone)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			},
+		},
+		{
+			name: "SessionManagerError",
+			body: correctBody,
+			buildStubs: func(querier *mockdb.MockQuerier, manager *auth.MockUuidSessionManager) {
+				querier.EXPECT().
+					CreateUser(gomock.Any(), gomock.Any()).
+					Times(1).
+					Return(correctUser, nil)
+
+				manager.CreateUUIDError = errors.New("session manager error")
+
+				querier.EXPECT().
+					CreateSession(gomock.Any(), gomock.Any()).
+					Times(0)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			},
+		},
+		{
+			name: "CreateSessionDBError",
+			body: correctBody,
+			buildStubs: func(querier *mockdb.MockQuerier, manager *auth.MockUuidSessionManager) {
+				querier.EXPECT().
+					CreateUser(gomock.Any(), gomock.Any()).
+					Times(1).
+					Return(correctUser, nil)
+
+				uuid := uuid.New()
+				manager.Uuid = uuid
+				manager.CreateUUIDError = nil
+
+				querier.EXPECT().
+					CreateSession(gomock.Any(), gomock.Any()).
+					Times(1).
+					Return(db.Session{}, errors.New("session manager error"))
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusInternalServerError, recorder.Code)
@@ -125,9 +190,10 @@ func TestCreateUser(t *testing.T) {
 			defer ctrl.Finish()
 
 			querier := mockdb.NewMockQuerier(ctrl)
-			tc.buildStubs(querier)
+			manager := auth.NewMockManager(querier)
+			tc.buildStubs(querier, manager)
 
-			server := NewServer(util.Config{}, querier, nil)
+			server := NewServer(util.Config{}, querier, manager)
 			recorder := httptest.NewRecorder()
 			url := "/users"
 
@@ -172,17 +238,18 @@ func TestLoginUser(t *testing.T) {
 	testCases := []struct {
 		name          string
 		body          gin.H
-		buildStubs    func(querier *mockdb.MockQuerier)
+		buildStubs    func(querier *mockdb.MockQuerier, manager *auth.MockUuidSessionManager)
 		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)
 	}{
 		{
 			name: "OK",
 			body: correctBody,
-			buildStubs: func(querier *mockdb.MockQuerier) {
+			buildStubs: func(querier *mockdb.MockQuerier, manager *auth.MockUuidSessionManager) {
 				querier.EXPECT().
 					GetUser(gomock.Any(), gomock.Any()).
 					Times(1).
 					Return(correctUser, nil)
+				addAuthMock(*manager, querier, correctUser.ID)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
@@ -194,7 +261,7 @@ func TestLoginUser(t *testing.T) {
 			body: gin.H{
 				"password": password,
 			},
-			buildStubs: func(querier *mockdb.MockQuerier) {
+			buildStubs: func(querier *mockdb.MockQuerier, manager *auth.MockUuidSessionManager) {
 				querier.EXPECT().
 					GetUser(gomock.Any(), gomock.Any()).
 					Times(0)
@@ -206,7 +273,7 @@ func TestLoginUser(t *testing.T) {
 		{
 			name: "DBErrorWithNotRegistered",
 			body: correctBody,
-			buildStubs: func(querier *mockdb.MockQuerier) {
+			buildStubs: func(querier *mockdb.MockQuerier, manager *auth.MockUuidSessionManager) {
 				querier.EXPECT().
 					GetUser(gomock.Any(), gomock.Any()).
 					Times(1).
@@ -219,7 +286,7 @@ func TestLoginUser(t *testing.T) {
 		{
 			name: "DBError",
 			body: correctBody,
-			buildStubs: func(querier *mockdb.MockQuerier) {
+			buildStubs: func(querier *mockdb.MockQuerier, manager *auth.MockUuidSessionManager) {
 				querier.EXPECT().
 					GetUser(gomock.Any(), gomock.Any()).
 					Times(1).
@@ -235,7 +302,7 @@ func TestLoginUser(t *testing.T) {
 				"password": "wrong_password",
 				"email":    email,
 			},
-			buildStubs: func(querier *mockdb.MockQuerier) {
+			buildStubs: func(querier *mockdb.MockQuerier, manager *auth.MockUuidSessionManager) {
 				querier.EXPECT().
 					GetUser(gomock.Any(), gomock.Any()).
 					Times(1).
@@ -243,6 +310,47 @@ func TestLoginUser(t *testing.T) {
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			},
+		},
+		{
+			name: "SessionManagerError",
+			body: correctBody,
+			buildStubs: func(querier *mockdb.MockQuerier, manager *auth.MockUuidSessionManager) {
+				querier.EXPECT().
+					GetUser(gomock.Any(), gomock.Any()).
+					Times(1).
+					Return(correctUser, nil)
+
+				manager.CreateUUIDError = errors.New("session manager error")
+
+				querier.EXPECT().
+					CreateSession(gomock.Any(), gomock.Any()).
+					Times(0)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			},
+		},
+		{
+			name: "CreateSessionDBError",
+			body: correctBody,
+			buildStubs: func(querier *mockdb.MockQuerier, manager *auth.MockUuidSessionManager) {
+				querier.EXPECT().
+					GetUser(gomock.Any(), gomock.Any()).
+					Times(1).
+					Return(correctUser, nil)
+
+				uuid := uuid.New()
+				manager.Uuid = uuid
+				manager.CreateUUIDError = nil
+
+				querier.EXPECT().
+					CreateSession(gomock.Any(), gomock.Any()).
+					Times(1).
+					Return(db.Session{}, errors.New("session manager error"))
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusInternalServerError, recorder.Code)
 			},
 		},
 	}
@@ -256,9 +364,10 @@ func TestLoginUser(t *testing.T) {
 			defer ctrl.Finish()
 
 			querier := mockdb.NewMockQuerier(ctrl)
-			tc.buildStubs(querier)
+			manager := auth.NewMockManager(querier)
+			tc.buildStubs(querier, manager)
 
-			server := NewServer(util.Config{}, querier, nil)
+			server := NewServer(util.Config{}, querier, manager)
 			recorder := httptest.NewRecorder()
 			url := "/login"
 
