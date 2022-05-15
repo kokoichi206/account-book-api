@@ -50,13 +50,12 @@ type FoodReceiptContent struct {
 }
 
 type Session struct {
-	ID           uuid.UUID `json:"id"`
-	UserID       int64     `json:"user_id"`
-	RefreshToken string    `json:"refresh_token"`
-	UserAgent    string    `json:"user_agent"`
-	ClientIp     string    `json:"client_ip"`
-	CreatedAt    time.Time `json:"created_at"`
-	ExpiresAt    time.Time `json:"expires_at"`
+	ID        uuid.UUID `json:"id"`
+	UserID    int64     `json:"user_id"`
+	UserAgent string    `json:"user_agent"`
+	ClientIp  string    `json:"client_ip"`
+	CreatedAt time.Time `json:"created_at"`
+	ExpiresAt time.Time `json:"expires_at"`
 }
 
 type Transfer struct {

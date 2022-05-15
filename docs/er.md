@@ -20,7 +20,6 @@ sessions }|--||users : "have"
 sessions {
 	uuid id PK
 	string user_id FK
-	string resresh_token
 	string user_agent
 	string client_ip
 	timestamp created_at
