@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"database/sql"
 	"net/http"
 	"time"
@@ -63,6 +64,29 @@ func (server *Server) createUser(c *gin.Context) {
 		return
 	}
 
+	// セッションを発行し、Cookieにセットする。
+	id, err := server.sessionManager.CreateSession()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err)
+		return
+	}
+	sarg := db.CreateSessionParams{
+		ID:        id,
+		UserID:    user.ID,
+		UserAgent: c.Request.UserAgent(),
+		ClientIp:  c.ClientIP(),
+		ExpiresAt: time.Now().Add(server.config.SessionDuration),
+	}
+	session, err := server.querier.CreateSession(context.Background(), sarg)
+	if err != nil {
+		// DBに何かしらの不備がある。
+		c.JSON(http.StatusInternalServerError, err)
+		return
+	}
+	maxAge := int(server.config.SessionDuration.Seconds())
+	domain := server.config.ServerAddress
+	c.SetCookie(cookieName, session.ID.String(), maxAge, "/", domain, true, true)
+
 	res := userResponse{
 		Name:              user.Name,
 		Email:             user.Email,
@@ -100,6 +124,29 @@ func (server *Server) loginUser(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
+
+	// セッションを発行し、Cookieにセットする。
+	id, err := server.sessionManager.CreateSession()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err)
+		return
+	}
+	sarg := db.CreateSessionParams{
+		ID:        id,
+		UserID:    user.ID,
+		UserAgent: c.Request.UserAgent(),
+		ClientIp:  c.ClientIP(),
+		ExpiresAt: time.Now().Add(server.config.SessionDuration),
+	}
+	session, err := server.querier.CreateSession(context.Background(), sarg)
+	if err != nil {
+		// DBに何かしらの不備がある。
+		c.JSON(http.StatusInternalServerError, err)
+		return
+	}
+	maxAge := int(server.config.SessionDuration.Seconds())
+	domain := server.config.ServerAddress
+	c.SetCookie(cookieName, session.ID.String(), maxAge, "/", domain, true, true)
 
 	res := userResponse{
 		Name:              user.Name,
