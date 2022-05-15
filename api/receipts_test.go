@@ -10,6 +10,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
+	"github.com/kokoichi206/account-book-api/auth"
 	mockdb "github.com/kokoichi206/account-book-api/db/mock"
 	db "github.com/kokoichi206/account-book-api/db/sqlc"
 	"github.com/kokoichi206/account-book-api/util"
@@ -54,6 +55,7 @@ func TestCreateReceipt(t *testing.T) {
 	testCases := []struct {
 		name          string
 		body          gin.H
+		setupAuth     func(t *testing.T, request *http.Request, manager *auth.MockUuidSessionManager)
 		buildStubs    func(querier *mockdb.MockQuerier)
 		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)
 	}{
@@ -133,8 +135,9 @@ func TestCreateReceipt(t *testing.T) {
 
 			querier := mockdb.NewMockQuerier(ctrl)
 			tc.buildStubs(querier)
+			manager := auth.NewMockManager(querier)
 
-			server := NewServer(util.Config{}, querier)
+			server := NewServer(util.Config{}, querier, manager)
 			recorder := httptest.NewRecorder()
 			url := "/receipts"
 
@@ -143,6 +146,7 @@ func TestCreateReceipt(t *testing.T) {
 
 			request, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
 			require.NoError(t, err)
+			addCompleteAuth(t, request, manager)
 
 			// Act
 			server.router.ServeHTTP(recorder, request)

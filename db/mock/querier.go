@@ -9,6 +9,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
+	uuid "github.com/google/uuid"
 	db "github.com/kokoichi206/account-book-api/db/sqlc"
 )
 
@@ -110,6 +111,21 @@ func (mr *MockQuerierMockRecorder) CreateFoodReceiptContent(arg0, arg1 interface
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateFoodReceiptContent", reflect.TypeOf((*MockQuerier)(nil).CreateFoodReceiptContent), arg0, arg1)
 }
 
+// CreateSession mocks base method.
+func (m *MockQuerier) CreateSession(arg0 context.Context, arg1 db.CreateSessionParams) (db.Session, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateSession", arg0, arg1)
+	ret0, _ := ret[0].(db.Session)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateSession indicates an expected call of CreateSession.
+func (mr *MockQuerierMockRecorder) CreateSession(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSession", reflect.TypeOf((*MockQuerier)(nil).CreateSession), arg0, arg1)
+}
+
 // CreateUser mocks base method.
 func (m *MockQuerier) CreateUser(arg0 context.Context, arg1 db.CreateUserParams) (db.User, error) {
 	m.ctrl.T.Helper()
@@ -123,6 +139,20 @@ func (m *MockQuerier) CreateUser(arg0 context.Context, arg1 db.CreateUserParams)
 func (mr *MockQuerierMockRecorder) CreateUser(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUser", reflect.TypeOf((*MockQuerier)(nil).CreateUser), arg0, arg1)
+}
+
+// DeleteSession mocks base method.
+func (m *MockQuerier) DeleteSession(arg0 context.Context, arg1 uuid.UUID) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteSession", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteSession indicates an expected call of DeleteSession.
+func (mr *MockQuerierMockRecorder) DeleteSession(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSession", reflect.TypeOf((*MockQuerier)(nil).DeleteSession), arg0, arg1)
 }
 
 // GetFoodContent mocks base method.
@@ -153,6 +183,21 @@ func (m *MockQuerier) GetFoodReceipt(arg0 context.Context, arg1 int64) (db.FoodR
 func (mr *MockQuerierMockRecorder) GetFoodReceipt(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFoodReceipt", reflect.TypeOf((*MockQuerier)(nil).GetFoodReceipt), arg0, arg1)
+}
+
+// GetSession mocks base method.
+func (m *MockQuerier) GetSession(arg0 context.Context, arg1 uuid.UUID) (db.Session, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSession", arg0, arg1)
+	ret0, _ := ret[0].(db.Session)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSession indicates an expected call of GetSession.
+func (mr *MockQuerierMockRecorder) GetSession(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSession", reflect.TypeOf((*MockQuerier)(nil).GetSession), arg0, arg1)
 }
 
 // GetUser mocks base method.
@@ -198,4 +243,18 @@ func (m *MockQuerier) ListFoodReceiptContents(arg0 context.Context, arg1 int64) 
 func (mr *MockQuerierMockRecorder) ListFoodReceiptContents(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListFoodReceiptContents", reflect.TypeOf((*MockQuerier)(nil).ListFoodReceiptContents), arg0, arg1)
+}
+
+// UpdateSession mocks base method.
+func (m *MockQuerier) UpdateSession(arg0 context.Context, arg1 db.UpdateSessionParams) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateSession", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateSession indicates an expected call of UpdateSession.
+func (mr *MockQuerierMockRecorder) UpdateSession(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSession", reflect.TypeOf((*MockQuerier)(nil).UpdateSession), arg0, arg1)
 }

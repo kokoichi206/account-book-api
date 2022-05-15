@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/kokoichi206/account-book-api/api"
+	"github.com/kokoichi206/account-book-api/auth"
 	db "github.com/kokoichi206/account-book-api/db/sqlc"
 	"github.com/kokoichi206/account-book-api/util"
 
@@ -23,7 +24,9 @@ func main() {
 	}
 
 	querier := db.New(conn)
-	server := api.NewServer(config, querier)
+	manager := auth.NewManager(querier)
+	server := api.NewServer(config, querier, manager)
+
 
 	err = server.Start(config.ServerAddress)
 	if err != nil {

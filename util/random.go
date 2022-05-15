@@ -101,3 +101,9 @@ func RandomAmount() int64 {
 func RandomExpense() int64 {
 	return RandomInt(100, 3_0000)
 }
+
+// ランダムなIPアドレスを取得する。
+// xxx.xxx.xxx.xxx の形式の値を返す。
+func RandomIPAddress() string {
+	return fmt.Sprintf("%03d.%03d.%03d.%03d", RandomInt(0, 999), RandomInt(0, 999), RandomInt(0, 999), RandomInt(0, 999))
+}

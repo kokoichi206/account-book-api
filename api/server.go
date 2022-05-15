@@ -2,23 +2,26 @@ package api
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/kokoichi206/account-book-api/auth"
 	db "github.com/kokoichi206/account-book-api/db/sqlc"
 	"github.com/kokoichi206/account-book-api/util"
 )
 
 // サーバーに関する情報を保持する構造体。
 type Server struct {
-	config  util.Config
-	querier db.Querier
-	router  *gin.Engine
+	config         util.Config
+	querier        db.Querier
+	router         *gin.Engine
+	sessionManager auth.SessionManager
 }
 
 // サーバーを作成し、返り値として受け取る。
-func NewServer(config util.Config, querier db.Querier) *Server {
+func NewServer(config util.Config, querier db.Querier, manager auth.SessionManager) *Server {
 
 	server := &Server{
-		config:  config,
-		querier: querier,
+		config:         config,
+		querier:        querier,
+		sessionManager: manager,
 	}
 
 	server.setupRouter()
@@ -32,9 +35,11 @@ func (server *Server) setupRouter() {
 	router.POST("/users", server.createUser)
 	router.POST("/login", server.loginUser)
 
-	router.POST("/receipts", server.createReceipt)
-	router.GET("/expenses", server.getAllExpenses)
-	router.POST("/expenses", server.createExpense)
+	authRoutes := router.Group("/").Use(authMiddleware(server.sessionManager))
+
+	authRoutes.POST("/receipts", server.createReceipt)
+	authRoutes.GET("/expenses", server.getAllExpenses)
+	authRoutes.POST("/expenses", server.createExpense)
 
 	server.router = router
 }
@@ -42,4 +47,9 @@ func (server *Server) setupRouter() {
 // 指定したアドレスに対してHTTP serverを起動する。
 func (server *Server) Start(address string) error {
 	return server.router.Run(address)
+}
+
+// エラー情報をJSONとして返すための関数。
+func errorResponse(err error) gin.H {
+	return gin.H{"error": err.Error()}
 }
