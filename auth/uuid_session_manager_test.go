@@ -79,23 +79,23 @@ func TestVerifySession(t *testing.T) {
 
 	ip := util.RandomIPAddress()
 
-	arg := verifySessionParams{
-		sessionID: u,
-		userAgent: "MacOS",
-		clientIp:  ip,
+	arg := VerifySessionParams{
+		SessionID: u,
+		UserAgent: "MacOS",
+		ClientIp:  ip,
 	}
 	session := db.Session{
-		ID:        arg.sessionID,
+		ID:        arg.SessionID,
 		UserID:    util.RandomID(),
-		UserAgent: arg.userAgent,
-		ClientIp:  arg.clientIp,
+		UserAgent: arg.UserAgent,
+		ClientIp:  arg.ClientIp,
 		CreatedAt: time.Now(),
 		ExpiresAt: time.Now().Add(30 * time.Minute),
 	}
 
 	testCases := []struct {
 		name          string
-		arg           verifySessionParams
+		arg           VerifySessionParams
 		buildStubs    func(querier *mockdb.MockQuerier)
 		checkResponse func(t *testing.T, valid bool, err error)
 	}{
@@ -115,10 +115,10 @@ func TestVerifySession(t *testing.T) {
 		},
 		{
 			name: "DBErrorNoRows",
-			arg: verifySessionParams{
-				sessionID: uuid.New(),
-				userAgent: "MacOS",
-				clientIp:  ip,
+			arg: VerifySessionParams{
+				SessionID: uuid.New(),
+				UserAgent: "MacOS",
+				ClientIp:  ip,
 			},
 			buildStubs: func(querier *mockdb.MockQuerier) {
 				querier.EXPECT().
@@ -140,9 +140,9 @@ func TestVerifySession(t *testing.T) {
 					GetSession(gomock.Any(), gomock.Any()).
 					Times(1).
 					Return(db.Session{
-						ID:        arg.sessionID,
+						ID:        arg.SessionID,
 						UserID:    util.RandomID(),
-						UserAgent: arg.userAgent,
+						UserAgent: arg.UserAgent,
 						ClientIp:  util.RandomIPAddress(),
 						CreatedAt: time.Now(),
 						ExpiresAt: time.Now().Add(30 * time.Minute),
@@ -161,10 +161,10 @@ func TestVerifySession(t *testing.T) {
 					GetSession(gomock.Any(), gomock.Any()).
 					Times(1).
 					Return(db.Session{
-						ID:        arg.sessionID,
+						ID:        arg.SessionID,
 						UserID:    util.RandomID(),
-						UserAgent: arg.userAgent,
-						ClientIp:  arg.clientIp,
+						UserAgent: arg.UserAgent,
+						ClientIp:  arg.ClientIp,
 						CreatedAt: time.Now(),
 						ExpiresAt: time.Now().Add(-10 * time.Second),
 					}, nil)

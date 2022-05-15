@@ -107,7 +107,7 @@ func TestCreateExpense(t *testing.T) {
 			querier := mockdb.NewMockQuerier(ctrl)
 			tc.buildStubs(querier)
 
-			server := NewServer(util.Config{}, querier)
+			server := NewServer(util.Config{}, querier, nil)
 			recorder := httptest.NewRecorder()
 
 			data, err := json.Marshal(tc.body)
@@ -250,7 +250,7 @@ func TestGetAllExpenses(t *testing.T) {
 			querier := mockdb.NewMockQuerier(ctrl)
 			tc.buildStubs(querier)
 
-			server := NewServer(util.Config{}, querier)
+			server := NewServer(util.Config{}, querier, nil)
 			recorder := httptest.NewRecorder()
 			request, err := http.NewRequest(http.MethodGet, tc.url, nil)
 			require.NoError(t, err)

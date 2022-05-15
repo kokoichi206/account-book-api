@@ -127,7 +127,7 @@ func TestCreateUser(t *testing.T) {
 			querier := mockdb.NewMockQuerier(ctrl)
 			tc.buildStubs(querier)
 
-			server := NewServer(util.Config{}, querier)
+			server := NewServer(util.Config{}, querier, nil)
 			recorder := httptest.NewRecorder()
 			url := "/users"
 
@@ -258,7 +258,7 @@ func TestLoginUser(t *testing.T) {
 			querier := mockdb.NewMockQuerier(ctrl)
 			tc.buildStubs(querier)
 
-			server := NewServer(util.Config{}, querier)
+			server := NewServer(util.Config{}, querier, nil)
 			recorder := httptest.NewRecorder()
 			url := "/login"
 

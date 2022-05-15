@@ -36,8 +36,8 @@ func (m *UuidSessionManager) CreateSession() (uuid.UUID, error) {
 // * 有効期限が現在よりも長い。
 // * アクセス元のUserAgentが発行時と同一。
 // * アクセス元のClientIPが発行時と同一。
-func (m *UuidSessionManager) VerifySession(arg verifySessionParams) (bool, error) {
-	s, err := m.querier.GetSession(context.Background(), arg.sessionID)
+func (m *UuidSessionManager) VerifySession(arg VerifySessionParams) (bool, error) {
+	s, err := m.querier.GetSession(context.Background(), arg.SessionID)
 	if err != nil {
 		// DBにセッションIDが存在しない時はエラーが返される。
 		// see: TestGetSessionWithWrongID in db/sqlc
@@ -45,7 +45,7 @@ func (m *UuidSessionManager) VerifySession(arg verifySessionParams) (bool, error
 	}
 
 	valid := s.ExpiresAt.After(time.Now()) &&
-		arg.userAgent == s.UserAgent &&
-		arg.clientIp == s.ClientIp
+		arg.UserAgent == s.UserAgent &&
+		arg.ClientIp == s.ClientIp
 	return valid, nil
 }
