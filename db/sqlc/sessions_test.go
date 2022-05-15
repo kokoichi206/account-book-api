@@ -34,7 +34,7 @@ func createRandomSession(t *testing.T) Session {
 	require.Equal(t, arg.UserAgent, session.UserAgent)
 	require.Equal(t, arg.ClientIp, session.ClientIp)
 	// UTCか+09TZかで違うっぽい
-	require.True(t, arg.ExpiresAt.Equal(session.ExpiresAt))
+	require.WithinDuration(t, arg.ExpiresAt, session.ExpiresAt, time.Second)
 
 	require.NotZero(t, session.CreatedAt)
 
@@ -61,7 +61,7 @@ func TestGetSession(t *testing.T) {
 	require.Equal(t, s.UserAgent, session.UserAgent)
 	require.Equal(t, s.ClientIp, session.ClientIp)
 	// UTCか+09TZかで違うっぽい
-	require.True(t, s.ExpiresAt.Equal(session.ExpiresAt))
+	require.WithinDuration(t, s.ExpiresAt, session.ExpiresAt, time.Second)
 	require.Equal(t, s.CreatedAt, session.CreatedAt)
 }
 
