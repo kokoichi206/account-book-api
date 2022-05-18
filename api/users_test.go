@@ -78,6 +78,11 @@ func TestCreateUser(t *testing.T) {
 			body: correctBody,
 			buildStubs: func(querier *mockdb.MockQuerier, manager *auth.MockUuidSessionManager) {
 				querier.EXPECT().
+					GetUser(gomock.Any(), gomock.Any()).
+					Times(1).
+					Return(db.User{}, sql.ErrNoRows)
+
+				querier.EXPECT().
 					CreateUser(gomock.Any(), gomock.Any()).
 					Times(1).
 					Return(correctUser, nil)
@@ -126,9 +131,48 @@ func TestCreateUser(t *testing.T) {
 			},
 		},
 		{
-			name: "DBError",
+			name: "AlreadyRegisteredEmailError",
 			body: correctBody,
 			buildStubs: func(querier *mockdb.MockQuerier, manager *auth.MockUuidSessionManager) {
+				querier.EXPECT().
+					GetUser(gomock.Any(), gomock.Any()).
+					Times(1).
+					Return(db.User{}, nil)
+
+				querier.EXPECT().
+					CreateUser(gomock.Any(), gomock.Any()).
+					Times(0)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			},
+		},
+		{
+			name: "DBErrorWhenGetUser",
+			body: correctBody,
+			buildStubs: func(querier *mockdb.MockQuerier, manager *auth.MockUuidSessionManager) {
+				querier.EXPECT().
+					GetUser(gomock.Any(), gomock.Any()).
+					Times(1).
+					Return(db.User{}, sql.ErrConnDone)
+
+				querier.EXPECT().
+					CreateUser(gomock.Any(), gomock.Any()).
+					Times(0)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			},
+		},
+		{
+			name: "DBErrorWhenCreateUser",
+			body: correctBody,
+			buildStubs: func(querier *mockdb.MockQuerier, manager *auth.MockUuidSessionManager) {
+				querier.EXPECT().
+					GetUser(gomock.Any(), gomock.Any()).
+					Times(1).
+					Return(db.User{}, sql.ErrNoRows)
+
 				querier.EXPECT().
 					CreateUser(gomock.Any(), gomock.Any()).
 					Times(1).
@@ -142,6 +186,11 @@ func TestCreateUser(t *testing.T) {
 			name: "SessionManagerError",
 			body: correctBody,
 			buildStubs: func(querier *mockdb.MockQuerier, manager *auth.MockUuidSessionManager) {
+				querier.EXPECT().
+					GetUser(gomock.Any(), gomock.Any()).
+					Times(1).
+					Return(db.User{}, sql.ErrNoRows)
+
 				querier.EXPECT().
 					CreateUser(gomock.Any(), gomock.Any()).
 					Times(1).
@@ -158,9 +207,14 @@ func TestCreateUser(t *testing.T) {
 			},
 		},
 		{
-			name: "CreateSessionDBError",
+			name: "DBErrorWhenCreateSession",
 			body: correctBody,
 			buildStubs: func(querier *mockdb.MockQuerier, manager *auth.MockUuidSessionManager) {
+				querier.EXPECT().
+					GetUser(gomock.Any(), gomock.Any()).
+					Times(1).
+					Return(db.User{}, sql.ErrNoRows)
+
 				querier.EXPECT().
 					CreateUser(gomock.Any(), gomock.Any()).
 					Times(1).
