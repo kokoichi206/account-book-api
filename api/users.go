@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"net/http"
 	"time"
 
@@ -22,7 +23,7 @@ type createUserRequest struct {
 
 // 新規ユーザー作成用のpayload。
 type userResponse struct {
-	Id                int       `json:"id"`
+	Id                int64     `json:"id"`
 	Name              string    `json:"username"`
 	Email             string    `json:"email"`
 	Age               int32     `json:"age"`
@@ -42,6 +43,19 @@ func (server *Server) createUser(c *gin.Context) {
 	var req createUserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, err)
+		return
+	}
+
+	// Emailが登録されているかチェックする。
+	_, err := server.querier.GetUser(c, req.Email)
+	if err != sql.ErrNoRows {
+		// エラーなし↔︎すでにEmailは登録済み
+		if err == nil {
+			c.JSON(http.StatusBadRequest, errorResponse(errors.New("The Email has already registered.")))
+			return
+		}
+		// それ以外は、DBに何かしらの不備がある。
+		c.JSON(http.StatusInternalServerError, err)
 		return
 	}
 
@@ -88,6 +102,7 @@ func (server *Server) createUser(c *gin.Context) {
 	c.SetCookie(cookieName, session.ID.String(), maxAge, "/", domain, true, true)
 
 	res := userResponse{
+		Id:                user.ID,
 		Name:              user.Name,
 		Email:             user.Email,
 		Age:               user.Age,
@@ -149,6 +164,7 @@ func (server *Server) loginUser(c *gin.Context) {
 	c.SetCookie(cookieName, session.ID.String(), maxAge, "/", domain, true, true)
 
 	res := userResponse{
+		Id:                user.ID,
 		Name:              user.Name,
 		Email:             user.Email,
 		Age:               user.Age,

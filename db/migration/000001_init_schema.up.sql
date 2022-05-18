@@ -5,7 +5,7 @@ CREATE TABLE "users" (
 	"email" varchar UNIQUE NOT NULL,
 	"age" int NOT NULL,
 	"balance" bigint NOT NULL,
-	"password_changed_at" timestamptz NOT NULL DEFAULT '1970-01-01 00:00:00+00',
+	"password_changed_at" timestamptz NOT NULL DEFAULT (now()),
 	"created_at" timestamptz NOT NULL DEFAULT (now())
 );
 
