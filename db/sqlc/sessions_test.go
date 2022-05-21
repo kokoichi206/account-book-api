@@ -123,6 +123,7 @@ func TestDeleteSession(t *testing.T) {
 	require.Equal(t, s.UserID, ss.UserID)
 	require.Equal(t, s.UserAgent, ss.UserAgent)
 	require.Equal(t, s.ClientIp, ss.ClientIp)
+	time.Sleep(1 * time.Second)
 	// 論理削除されていることの確認。
 	require.True(t, time.Now().After(ss.ExpiresAt))
 	require.Equal(t, s.CreatedAt, ss.CreatedAt)
