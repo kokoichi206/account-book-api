@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	db "github.com/kokoichi206/account-book-api/db/sqlc"
 	"github.com/kokoichi206/account-book-api/util"
 )
@@ -173,4 +174,32 @@ func (server *Server) loginUser(c *gin.Context) {
 		CreatedAt:         user.CreatedAt,
 	}
 	c.JSON(http.StatusOK, res)
+}
+
+// ログアウト用のエンドポイント。
+func (server *Server) logout(c *gin.Context) {
+
+	// authを通してるので、基本的に前半でこけることはない。
+	sessionString, err := c.Cookie(cookieName)
+	// Cookieから値が取得できない場合。
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
+	sessionID, err := uuid.Parse(sessionString)
+	// 取得したCookieが、uuidの形式になってない場合。
+	if err != nil {
+		c.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	err = server.querier.DeleteSession(context.Background(), sessionID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, errorResponse(err))
+	}
+	domain := server.config.ServerAddress
+	// Cookieの有効期限を負の値にし、論理的に削除にする。
+	c.SetCookie(cookieName, sessionID.String(), -1, "/", domain, true, true)
+
+	c.Status(http.StatusOK)
 }
