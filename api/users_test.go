@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -452,4 +453,101 @@ func checkResponseBody(t *testing.T, body *bytes.Buffer, user db.User) {
 	require.Equal(t, user.Email, gotUser.Email)
 	require.Equal(t, user.Age, gotUser.Age)
 	require.Equal(t, user.Balance, gotUser.Balance)
+}
+
+func TestLogoutUser(t *testing.T) {
+
+	testCases := []struct {
+		name          string
+		buildStubs    func(querier *mockdb.MockQuerier, manager *auth.MockUuidSessionManager)
+		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder, manager *auth.MockUuidSessionManager)
+	}{
+		{
+			name: "OK",
+			buildStubs: func(querier *mockdb.MockQuerier, manager *auth.MockUuidSessionManager) {
+				querier.EXPECT().
+					DeleteSession(gomock.Any(), manager.Uuid).
+					Times(1).
+					Return(nil)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder, manager *auth.MockUuidSessionManager) {
+				require.Equal(t, http.StatusOK, recorder.Code)
+				// Cookieの削除の指示が行われていること。
+				checkSetCookie(t, recorder, manager.Uuid)
+			},
+		},
+		{
+			name: "DBErrorWhenDeleteSession",
+			buildStubs: func(querier *mockdb.MockQuerier, manager *auth.MockUuidSessionManager) {
+				querier.EXPECT().
+					DeleteSession(gomock.Any(), manager.Uuid).
+					Times(1).
+					Return(sql.ErrConnDone)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder, manager *auth.MockUuidSessionManager) {
+				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+				// ResponseBodyにエラーメッセージが乗っていること。
+				checkError(t, sql.ErrConnDone.Error(), recorder.Body)
+			},
+		},
+	}
+
+	for i := range testCases {
+		tc := testCases[i]
+
+		t.Run(tc.name, func(t *testing.T) {
+			// Arrange
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			querier := mockdb.NewMockQuerier(ctrl)
+			manager := auth.NewMockManager(querier)
+
+			session := uuid.New()
+			manager.Verify = true
+			manager.VerifyError = nil
+			manager.Uuid = session
+
+			tc.buildStubs(querier, manager)
+
+			server := NewServer(util.Config{}, querier, manager)
+			recorder := httptest.NewRecorder()
+			url := "/logout"
+
+			request, err := http.NewRequest(http.MethodPost, url, nil)
+			require.NoError(t, err)
+
+			// set cookie
+			addAuthorization(t, request, session.String())
+
+			// Act
+			server.router.ServeHTTP(recorder, request)
+
+			// Assert
+			tc.checkResponse(t, recorder, manager)
+		})
+	}
+}
+
+func checkError(t *testing.T, errString string, responseBody *bytes.Buffer) {
+	data, err := ioutil.ReadAll(responseBody)
+	require.NoError(t, err)
+
+	type errorMsg struct {
+		Error string `json:"error"`
+	}
+
+	var body errorMsg
+	err = json.Unmarshal(data, &body)
+	require.NoError(t, err)
+	require.NotNil(t, body.Error)
+	require.Equal(t, errString, body.Error)
+}
+
+// Cookieの削除指示が正しく行われているか確認。
+func checkSetCookie(t *testing.T, recorder *httptest.ResponseRecorder, sessionId uuid.UUID) {
+	// Set-CookieがHeaderにあるかどうか。
+	// 削除指示なので『Maz-Age=0』が指定されていること。
+	setCookieValue := fmt.Sprintf("session=%v; Path=/; Max-Age=0; HttpOnly; Secure", sessionId)
+	require.Equal(t, setCookieValue, recorder.Header().Get("Set-Cookie"))
 }
