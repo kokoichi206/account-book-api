@@ -68,6 +68,12 @@ func TestCreateExpense(t *testing.T) {
 					CreateExpense(gomock.Any(), gomock.Any()).
 					Times(1).
 					Return(expense, nil)
+
+				// authのmiddlewareを通すため。
+				querier.EXPECT().
+					UpdateSession(gomock.Any(), gomock.Any()).
+					Times(1).
+					Return(nil)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusCreated, recorder.Code)
@@ -84,6 +90,12 @@ func TestCreateExpense(t *testing.T) {
 				querier.EXPECT().
 					CreateExpense(gomock.Any(), gomock.Any()).
 					Times(0)
+
+				// authのmiddlewareを通すため。
+				querier.EXPECT().
+					UpdateSession(gomock.Any(), gomock.Any()).
+					Times(1).
+					Return(nil)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusBadRequest, recorder.Code)
@@ -100,6 +112,12 @@ func TestCreateExpense(t *testing.T) {
 					CreateExpense(gomock.Any(), gomock.Any()).
 					Times(1).
 					Return(db.Expense{}, sql.ErrConnDone)
+
+				// authのmiddlewareを通すため。
+				querier.EXPECT().
+					UpdateSession(gomock.Any(), gomock.Any()).
+					Times(1).
+					Return(nil)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusInternalServerError, recorder.Code)
@@ -209,6 +227,12 @@ func TestGetAllExpenses(t *testing.T) {
 					ListExpenses(gomock.Any(), gomock.Any()).
 					Times(1).
 					Return(listExpense, nil)
+
+				// authのmiddlewareを通すため。
+				querier.EXPECT().
+					UpdateSession(gomock.Any(), gomock.Any()).
+					Times(1).
+					Return(nil)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
@@ -226,6 +250,12 @@ func TestGetAllExpenses(t *testing.T) {
 					ListExpenses(gomock.Any(), gomock.Any()).
 					Times(1).
 					Return(listExpenseWithoutComment, nil)
+
+				// authのmiddlewareを通すため。
+				querier.EXPECT().
+					UpdateSession(gomock.Any(), gomock.Any()).
+					Times(1).
+					Return(nil)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
@@ -240,6 +270,11 @@ func TestGetAllExpenses(t *testing.T) {
 			buildStubs: func(querier *mockdb.MockQuerier) {
 				querier.EXPECT().
 					ListExpenses(gomock.Any(), gomock.Any()).
+					Times(0)
+
+				// authのmiddlewareを通すため。
+				querier.EXPECT().
+					UpdateSession(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
@@ -256,6 +291,12 @@ func TestGetAllExpenses(t *testing.T) {
 				querier.EXPECT().
 					ListExpenses(gomock.Any(), gomock.Any()).
 					Times(0)
+
+				// authのmiddlewareを通すため。
+				querier.EXPECT().
+					UpdateSession(gomock.Any(), gomock.Any()).
+					Times(1).
+					Return(nil)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusBadRequest, recorder.Code)
@@ -272,6 +313,12 @@ func TestGetAllExpenses(t *testing.T) {
 					ListExpenses(gomock.Any(), gomock.Any()).
 					Times(1).
 					Return([]db.ListExpensesRow{}, sql.ErrConnDone)
+
+				// authのmiddlewareを通すため。
+				querier.EXPECT().
+					UpdateSession(gomock.Any(), gomock.Any()).
+					Times(1).
+					Return(nil)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusInternalServerError, recorder.Code)

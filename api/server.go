@@ -34,10 +34,9 @@ func (server *Server) setupRouter() {
 
 	router.POST("/users", server.createUser)
 	router.POST("/login", server.loginUser)
+	router.POST("/logout", server.logout)
 
-	authRoutes := router.Group("/").Use(authMiddleware(server.sessionManager))
-
-	authRoutes.POST("/logout", server.logout)
+	authRoutes := router.Group("/").Use(server.authMiddleware(server.sessionManager))
 
 	authRoutes.POST("/receipts", server.createReceipt)
 	authRoutes.GET("/expenses", server.getAllExpenses)

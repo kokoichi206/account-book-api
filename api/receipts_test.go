@@ -70,6 +70,12 @@ func TestCreateReceipt(t *testing.T) {
 				querier.EXPECT().
 					CreateFoodReceiptContent(gomock.Any(), gomock.Any()).
 					Times(3)
+
+				// authのmiddlewareを通すため。
+				querier.EXPECT().
+					UpdateSession(gomock.Any(), gomock.Any()).
+					Times(1).
+					Return(nil)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
@@ -85,6 +91,12 @@ func TestCreateReceipt(t *testing.T) {
 				querier.EXPECT().
 					CreateFoodReceiptContent(gomock.Any(), gomock.Any()).
 					Times(0)
+
+				// authのmiddlewareを通すため。
+				querier.EXPECT().
+					UpdateSession(gomock.Any(), gomock.Any()).
+					Times(1).
+					Return(nil)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusBadRequest, recorder.Code)
@@ -101,6 +113,12 @@ func TestCreateReceipt(t *testing.T) {
 				querier.EXPECT().
 					CreateFoodReceiptContent(gomock.Any(), gomock.Any()).
 					Times(0)
+
+				// authのmiddlewareを通すため。
+				querier.EXPECT().
+					UpdateSession(gomock.Any(), gomock.Any()).
+					Times(1).
+					Return(nil)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusInternalServerError, recorder.Code)
@@ -118,6 +136,12 @@ func TestCreateReceipt(t *testing.T) {
 					CreateFoodReceiptContent(gomock.Any(), gomock.Any()).
 					Times(1).
 					Return(db.FoodReceiptContent{}, sql.ErrConnDone)
+
+				// authのmiddlewareを通すため。
+				querier.EXPECT().
+					UpdateSession(gomock.Any(), gomock.Any()).
+					Times(1).
+					Return(nil)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusInternalServerError, recorder.Code)
