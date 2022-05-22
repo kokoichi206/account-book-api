@@ -88,6 +88,8 @@ func (server *Server) createUser(c *gin.Context) {
 			return
 		}
 		// それ以外は、DBに何かしらの不備がある。
+		// dbのコードが自動生成されるためここで情報を付与する（本来はdbパッケージで行うべき）。
+		err = fmt.Errorf("failed to GetUser: %w", err)
 		zap.S().Error(err)
 
 		c.Error(err)
@@ -98,6 +100,7 @@ func (server *Server) createUser(c *gin.Context) {
 	hashedPassword, err := util.HashPassword(req.Password)
 	if err != nil {
 		// パスワードのハッシュ化ができず先に進まないのは致命的。
+		err = fmt.Errorf("failed to util.HashPassword: %w", err)
 		zap.S().Error(err)
 
 		c.Error(err)
@@ -114,6 +117,7 @@ func (server *Server) createUser(c *gin.Context) {
 
 	user, err := server.querier.CreateUser(c, arg)
 	if err != nil {
+		err = fmt.Errorf("failed to CreateUser: %w", err)
 		zap.S().Error(err)
 
 		c.Error(err)
@@ -124,6 +128,7 @@ func (server *Server) createUser(c *gin.Context) {
 	// セッションを発行し、Cookieにセットする。
 	id, err := server.sessionManager.CreateSession()
 	if err != nil {
+		err = fmt.Errorf("failed to sessionManager.CreateSession: %w", err)
 		zap.S().Error(err)
 
 		c.Error(err)
@@ -140,6 +145,7 @@ func (server *Server) createUser(c *gin.Context) {
 	session, err := server.querier.CreateSession(context.Background(), sarg)
 	if err != nil {
 		// DBに何かしらの不備がある。
+		err = fmt.Errorf("failed to querier.CreateSession: %w", err)
 		zap.S().Error(err)
 
 		c.Error(err)
@@ -184,6 +190,7 @@ func (server *Server) loginUser(c *gin.Context) {
 			return
 		}
 		// それ以外は、DBに何かしらの不備がある。
+		err = fmt.Errorf("failed to GetUser: %w", err)
 		zap.S().Error(err)
 
 		c.Error(err)
@@ -203,6 +210,7 @@ func (server *Server) loginUser(c *gin.Context) {
 	// セッションを発行し、Cookieにセットする。
 	id, err := server.sessionManager.CreateSession()
 	if err != nil {
+		err = fmt.Errorf("failed to sessionManager.CreateSession: %w", err)
 		zap.S().Error(err)
 
 		c.Error(err)
@@ -219,6 +227,7 @@ func (server *Server) loginUser(c *gin.Context) {
 	session, err := server.querier.CreateSession(context.Background(), sarg)
 	if err != nil {
 		// DBに何かしらの不備がある。
+		err = fmt.Errorf("failed to querier.CreateSession: %w", err)
 		zap.S().Error(err)
 
 		c.Error(err)
@@ -264,6 +273,7 @@ func (server *Server) logout(c *gin.Context) {
 
 	err = server.querier.DeleteSession(context.Background(), sessionID)
 	if err != nil {
+		err = fmt.Errorf("failed to DeleteSession: %w", err)
 		zap.S().Error(err)
 
 		c.Error(err)

@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -122,6 +123,7 @@ func (server *Server) getAllExpenses(c *gin.Context) {
 
 	listExpenses, err := server.querier.ListExpenses(c, req.UserID)
 	if err != nil {
+		err = fmt.Errorf("failed to ListExpenses: %w", err)
 		zap.S().Error(err)
 
 		c.Error(err)

@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -46,6 +47,7 @@ func (server *Server) createReceipt(c *gin.Context) {
 	storeName := req.StoreName
 	foodReceipt, err := server.querier.CreateFoodReceipt(c, storeName)
 	if err != nil {
+		err = fmt.Errorf("failed to CreateFoodReceipt: %w", err)
 		zap.S().Error(err)
 
 		c.Error(err)
@@ -65,6 +67,7 @@ func (server *Server) createReceipt(c *gin.Context) {
 		// もしかしたら transaction を行う必要があるかも。
 		_, err := server.querier.CreateFoodReceiptContent(c, arg)
 		if err != nil {
+			err = fmt.Errorf("failed to CreateFoodReceiptContent: %w", err)
 			zap.S().Error(err)
 
 			c.Error(err)

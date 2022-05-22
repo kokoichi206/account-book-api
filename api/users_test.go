@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -577,7 +578,7 @@ func checkError(t *testing.T, errString string, responseBody *bytes.Buffer) {
 	err = json.Unmarshal(data, &body)
 	require.NoError(t, err)
 	require.NotNil(t, body.Error)
-	require.Equal(t, errString, body.Error)
+	require.True(t, strings.Contains(body.Error, errString))
 }
 
 // Cookieの削除指示が正しく行われているか確認。
