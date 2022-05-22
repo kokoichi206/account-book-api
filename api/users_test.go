@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -21,6 +22,42 @@ import (
 	"github.com/kokoichi206/account-book-api/util"
 	"github.com/stretchr/testify/require"
 )
+
+func TestMustMasedJSONString(t *testing.T) {
+
+	testCases := []struct {
+		name     string
+		input    createUserRequest
+		expected string
+	}{
+		{
+			name: "OK",
+			input: createUserRequest{
+				Name:     "John Doe",
+				Password: "password",
+				Email:    "this.is.test@example.com",
+				Age:      123,
+				Balance:  13579000,
+			},
+			// [Password: "password"] がマスクされていること（SECRETになっていること）が期待値。
+			expected: "{\"username\":\"John Doe\",\"password\":\"[SECRET]\",\"email\":\"this.is.test@example.com\",\"age\":123,\"balance\":13579000}",
+		},
+	}
+
+	for i := range testCases {
+		tc := testCases[i]
+
+		t.Run(tc.name, func(t *testing.T) {
+			// Arrange
+
+			// Act
+			expected := tc.input.MustMasedJSONString()
+
+			// Assert
+			require.Equal(t, expected, tc.expected)
+		})
+	}
+}
 
 func addAuthMock(manager auth.MockUuidSessionManager, querier *mockdb.MockQuerier, userID int64) {
 	uuid := uuid.New()
@@ -248,7 +285,7 @@ func TestCreateUser(t *testing.T) {
 			manager := auth.NewMockManager(querier)
 			tc.buildStubs(querier, manager)
 
-			server := NewServer(util.Config{}, querier, manager)
+			server := NewServer(util.Config{}, querier, manager, util.InitLogger())
 			recorder := httptest.NewRecorder()
 			url := "/users"
 
@@ -422,7 +459,7 @@ func TestLoginUser(t *testing.T) {
 			manager := auth.NewMockManager(querier)
 			tc.buildStubs(querier, manager)
 
-			server := NewServer(util.Config{}, querier, manager)
+			server := NewServer(util.Config{}, querier, manager, util.InitLogger())
 			recorder := httptest.NewRecorder()
 			url := "/login"
 
@@ -510,7 +547,7 @@ func TestLogoutUser(t *testing.T) {
 
 			tc.buildStubs(querier, manager)
 
-			server := NewServer(util.Config{}, querier, manager)
+			server := NewServer(util.Config{}, querier, manager, util.InitLogger())
 			recorder := httptest.NewRecorder()
 			url := "/logout"
 
@@ -541,7 +578,7 @@ func checkError(t *testing.T, errString string, responseBody *bytes.Buffer) {
 	err = json.Unmarshal(data, &body)
 	require.NoError(t, err)
 	require.NotNil(t, body.Error)
-	require.Equal(t, errString, body.Error)
+	require.True(t, strings.Contains(body.Error, errString))
 }
 
 // Cookieの削除指示が正しく行われているか確認。

@@ -151,7 +151,7 @@ func TestAuthMiddleware(t *testing.T) {
 			manager := auth.NewMockManager(querier)
 			tc.buildStubs(t, querier, manager)
 
-			server := NewServer(config, querier, manager)
+			server := NewServer(config, querier, manager, util.InitLogger())
 			// テスト用のパスを用意する。
 			authPath := "/auth"
 			server.router.GET(

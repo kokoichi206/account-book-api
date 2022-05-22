@@ -8,6 +8,7 @@ import (
 	"github.com/kokoichi206/account-book-api/auth"
 	db "github.com/kokoichi206/account-book-api/db/sqlc"
 	"github.com/kokoichi206/account-book-api/util"
+	"go.uber.org/zap"
 
 	_ "github.com/lib/pq"
 )
@@ -25,8 +26,12 @@ func main() {
 
 	querier := db.New(conn)
 	manager := auth.NewManager(querier)
-	server := api.NewServer(config, querier, manager)
 
+	logger := util.InitLogger()
+	// globalで上記設定を使えるようにする。
+	zap.ReplaceGlobals(logger)
+
+	server := api.NewServer(config, querier, manager, logger)
 
 	err = server.Start(config.ServerAddress)
 	if err != nil {

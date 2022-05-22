@@ -1,11 +1,14 @@
 package api
 
 import (
+	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	db "github.com/kokoichi206/account-book-api/db/sqlc"
 	"github.com/kokoichi206/account-book-api/util"
+	"go.uber.org/zap"
 )
 
 // レシート登録用のpayload。
@@ -13,6 +16,15 @@ type createReceiptRequest struct {
 	StoreName    string        `json:"store_name" binding:"required"`
 	FoodContents []foodContent `json:"food_contents" binding:"required"`
 	TotalPrice   int           `json:"total_price" binding:"required"`
+}
+
+// 出力用のJSONを取得する。
+func (request createReceiptRequest) MustJSONString() string {
+	bytes, err := json.Marshal(request)
+	if err != nil {
+		return ""
+	}
+	return string(bytes)
 }
 
 // レシート登録時に使う、１つの食品用の構造体。
@@ -29,9 +41,16 @@ func (server *Server) createReceipt(c *gin.Context) {
 		return
 	}
 
+	// MAYBE: これはDebugかInfoか。
+	zap.S().Debug(req.MustJSONString())
+
 	storeName := req.StoreName
 	foodReceipt, err := server.querier.CreateFoodReceipt(c, storeName)
 	if err != nil {
+		err = fmt.Errorf("failed to CreateFoodReceipt: %w", err)
+		zap.S().Error(err)
+
+		c.Error(err)
 		c.JSON(http.StatusInternalServerError, err)
 		return
 	}
@@ -48,6 +67,10 @@ func (server *Server) createReceipt(c *gin.Context) {
 		// もしかしたら transaction を行う必要があるかも。
 		_, err := server.querier.CreateFoodReceiptContent(c, arg)
 		if err != nil {
+			err = fmt.Errorf("failed to CreateFoodReceiptContent: %w", err)
+			zap.S().Error(err)
+
+			c.Error(err)
 			c.JSON(http.StatusInternalServerError, err)
 			return
 		}
