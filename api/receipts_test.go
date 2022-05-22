@@ -161,7 +161,7 @@ func TestCreateReceipt(t *testing.T) {
 			tc.buildStubs(querier)
 			manager := auth.NewMockManager(querier)
 
-			server := NewServer(util.Config{}, querier, manager)
+			server := NewServer(util.Config{}, querier, manager, util.InitLogger())
 			recorder := httptest.NewRecorder()
 			url := "/receipts"
 

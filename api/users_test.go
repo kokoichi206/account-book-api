@@ -248,7 +248,7 @@ func TestCreateUser(t *testing.T) {
 			manager := auth.NewMockManager(querier)
 			tc.buildStubs(querier, manager)
 
-			server := NewServer(util.Config{}, querier, manager)
+			server := NewServer(util.Config{}, querier, manager, util.InitLogger())
 			recorder := httptest.NewRecorder()
 			url := "/users"
 
@@ -422,7 +422,7 @@ func TestLoginUser(t *testing.T) {
 			manager := auth.NewMockManager(querier)
 			tc.buildStubs(querier, manager)
 
-			server := NewServer(util.Config{}, querier, manager)
+			server := NewServer(util.Config{}, querier, manager, util.InitLogger())
 			recorder := httptest.NewRecorder()
 			url := "/login"
 
@@ -510,7 +510,7 @@ func TestLogoutUser(t *testing.T) {
 
 			tc.buildStubs(querier, manager)
 
-			server := NewServer(util.Config{}, querier, manager)
+			server := NewServer(util.Config{}, querier, manager, util.InitLogger())
 			recorder := httptest.NewRecorder()
 			url := "/logout"
 
