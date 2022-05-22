@@ -5,6 +5,7 @@ import (
 	"github.com/kokoichi206/account-book-api/auth"
 	db "github.com/kokoichi206/account-book-api/db/sqlc"
 	"github.com/kokoichi206/account-book-api/util"
+	"go.uber.org/zap"
 )
 
 // サーバーに関する情報を保持する構造体。
@@ -13,15 +14,17 @@ type Server struct {
 	querier        db.Querier
 	router         *gin.Engine
 	sessionManager auth.SessionManager
+	logger         *zap.Logger
 }
 
 // サーバーを作成し、返り値として受け取る。
-func NewServer(config util.Config, querier db.Querier, manager auth.SessionManager) *Server {
+func NewServer(config util.Config, querier db.Querier, manager auth.SessionManager, logger *zap.Logger) *Server {
 
 	server := &Server{
 		config:         config,
 		querier:        querier,
 		sessionManager: manager,
+		logger:         logger,
 	}
 
 	server.setupRouter()
@@ -30,7 +33,8 @@ func NewServer(config util.Config, querier db.Querier, manager auth.SessionManag
 
 // ルーティングの設定を行い、構造体の変数に設定する。
 func (server *Server) setupRouter() {
-	router := gin.Default()
+	router := gin.New()
+	router.Use(util.GinLogger(server.logger), util.GinRecovery(server.logger, true))
 
 	router.POST("/users", server.createUser)
 	router.POST("/login", server.loginUser)
