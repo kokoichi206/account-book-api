@@ -13,8 +13,8 @@ func InitLogger() *zap.Logger {
 	sy := getLogWriter()
 	encoder := getEncoder()
 
-	// TODO: 常にzapcore.InfoLevelでいいか？
-	core := zapcore.NewCore(encoder, sy, zapcore.InfoLevel)
+	// TODO: 常にzapcore.DebugLevelでいいか？
+	core := zapcore.NewCore(encoder, sy, zapcore.DebugLevel)
 	lg := zap.New(core, zap.AddCaller())
 
 	return lg

@@ -10,6 +10,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/kokoichi206/account-book-api/auth"
 	db "github.com/kokoichi206/account-book-api/db/sqlc"
+	"go.uber.org/zap"
 )
 
 const (
@@ -53,6 +54,9 @@ func (server *Server) authMiddleware(m auth.SessionManager) gin.HandlerFunc {
 		}
 		err = server.querier.UpdateSession(context.Background(), updateArg)
 		if err != nil {
+			zap.S().Error(err)
+
+			c.Error(err)
 			c.AbortWithStatusJSON(http.StatusInternalServerError, errorResponse(err))
 			return
 		}

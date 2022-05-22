@@ -3,7 +3,9 @@ package api
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -11,6 +13,7 @@ import (
 	"github.com/google/uuid"
 	db "github.com/kokoichi206/account-book-api/db/sqlc"
 	"github.com/kokoichi206/account-book-api/util"
+	"go.uber.org/zap"
 )
 
 // 新規ユーザー作成用のpayload。
@@ -20,6 +23,15 @@ type createUserRequest struct {
 	Email    string `json:"email" binding:"required,email"`
 	Age      int32  `json:"age"`
 	Balance  int64  `json:"balance"`
+}
+
+// 出力用のJSONを取得する。
+func (request createUserRequest) MustJSONString() string {
+	bytes, err := json.Marshal(request)
+	if err != nil {
+		return ""
+	}
+	return string(bytes)
 }
 
 // 新規ユーザー作成用のpayload。
@@ -39,6 +51,15 @@ type loginUserRequest struct {
 	Email    string `json:"email" binding:"required,email"`
 }
 
+// 出力用のJSONを取得する。
+func (request loginUserRequest) MustJSONString() string {
+	bytes, err := json.Marshal(request)
+	if err != nil {
+		return ""
+	}
+	return string(bytes)
+}
+
 // 新規ユーザー作成のエンドポイント。
 func (server *Server) createUser(c *gin.Context) {
 	var req createUserRequest
@@ -47,21 +68,33 @@ func (server *Server) createUser(c *gin.Context) {
 		return
 	}
 
+	// MAYBE: これはDebugかInfoか。
+	zap.S().Debug(req.MustJSONString())
+
 	// Emailが登録されているかチェックする。
 	_, err := server.querier.GetUser(c, req.Email)
 	if err != sql.ErrNoRows {
 		// エラーなし↔︎すでにEmailは登録済み
 		if err == nil {
+			message := fmt.Sprintf("The Email [%s] has already registered.", req.Email)
+			zap.S().Warn(message)
 			c.JSON(http.StatusBadRequest, errorResponse(errors.New("The Email has already registered.")))
 			return
 		}
 		// それ以外は、DBに何かしらの不備がある。
+		zap.S().Error(err)
+
+		c.Error(err)
 		c.JSON(http.StatusInternalServerError, err)
 		return
 	}
 
 	hashedPassword, err := util.HashPassword(req.Password)
 	if err != nil {
+		// パスワードのハッシュ化ができず先に進まないのは致命的。
+		zap.S().Error(err)
+
+		c.Error(err)
 		c.JSON(http.StatusInternalServerError, err)
 		return
 	}
@@ -75,6 +108,9 @@ func (server *Server) createUser(c *gin.Context) {
 
 	user, err := server.querier.CreateUser(c, arg)
 	if err != nil {
+		zap.S().Error(err)
+
+		c.Error(err)
 		c.JSON(http.StatusInternalServerError, err)
 		return
 	}
@@ -82,6 +118,9 @@ func (server *Server) createUser(c *gin.Context) {
 	// セッションを発行し、Cookieにセットする。
 	id, err := server.sessionManager.CreateSession()
 	if err != nil {
+		zap.S().Error(err)
+
+		c.Error(err)
 		c.JSON(http.StatusInternalServerError, err)
 		return
 	}
@@ -95,6 +134,9 @@ func (server *Server) createUser(c *gin.Context) {
 	session, err := server.querier.CreateSession(context.Background(), sarg)
 	if err != nil {
 		// DBに何かしらの不備がある。
+		zap.S().Error(err)
+
+		c.Error(err)
 		c.JSON(http.StatusInternalServerError, err)
 		return
 	}
@@ -122,21 +164,32 @@ func (server *Server) loginUser(c *gin.Context) {
 		return
 	}
 
+	// MAYBE: これはDebugかInfoか。
+	zap.S().Debug(req.MustJSONString())
+
 	// Emailが登録されているかチェックする。
 	user, err := server.querier.GetUser(c, req.Email)
 	if err != nil {
 		// 登録されていなければ、ユーザーのリクエストに不備がある。
 		if err == sql.ErrNoRows {
+			message := fmt.Sprintf("The Email [%s] has not registered yet.", req.Email)
+			zap.S().Warn(message)
 			c.JSON(http.StatusBadRequest, err)
 			return
 		}
 		// それ以外は、DBに何かしらの不備がある。
+		zap.S().Error(err)
+
+		c.Error(err)
 		c.JSON(http.StatusInternalServerError, err)
 		return
 	}
 
 	// パスワードをチェックする。
 	if err := util.CheckPassword(req.Password, user.Password); err != nil {
+		zap.S().Error(err)
+
+		c.Error(err)
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
@@ -144,6 +197,9 @@ func (server *Server) loginUser(c *gin.Context) {
 	// セッションを発行し、Cookieにセットする。
 	id, err := server.sessionManager.CreateSession()
 	if err != nil {
+		zap.S().Error(err)
+
+		c.Error(err)
 		c.JSON(http.StatusInternalServerError, err)
 		return
 	}
@@ -157,6 +213,9 @@ func (server *Server) loginUser(c *gin.Context) {
 	session, err := server.querier.CreateSession(context.Background(), sarg)
 	if err != nil {
 		// DBに何かしらの不備がある。
+		zap.S().Error(err)
+
+		c.Error(err)
 		c.JSON(http.StatusInternalServerError, err)
 		return
 	}
@@ -183,19 +242,27 @@ func (server *Server) logout(c *gin.Context) {
 	sessionString, err := c.Cookie(cookieName)
 	// Cookieから値が取得できない場合。
 	if err != nil {
+		message := fmt.Errorf("could not find cookie: %w", err)
+		zap.S().Warn(message)
 		c.JSON(http.StatusUnauthorized, errorResponse(err))
 		return
 	}
 	sessionID, err := uuid.Parse(sessionString)
 	// 取得したCookieが、uuidの形式になってない場合。
 	if err != nil {
+		message := fmt.Sprintf("could not convert session [%s] to uuid.", sessionID)
+		zap.S().Warn(message)
 		c.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
 	err = server.querier.DeleteSession(context.Background(), sessionID)
 	if err != nil {
+		zap.S().Error(err)
+
+		c.Error(err)
 		c.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
 	}
 	domain := server.config.ServerAddress
 	// Cookieの有効期限を負の値にし、論理的に削除にする。

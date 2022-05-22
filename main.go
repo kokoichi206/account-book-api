@@ -28,6 +28,8 @@ func main() {
 	manager := auth.NewManager(querier)
 
 	logger := util.InitLogger()
+	// globalで上記設定を使えるようにする。
+	zap.ReplaceGlobals(logger)
 
 	server := api.NewServer(config, querier, manager, logger)
 
