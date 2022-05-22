@@ -22,6 +22,42 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestMustMasedJSONString(t *testing.T) {
+
+	testCases := []struct {
+		name     string
+		input    createUserRequest
+		expected string
+	}{
+		{
+			name: "OK",
+			input: createUserRequest{
+				Name:     "John Doe",
+				Password: "password",
+				Email:    "this.is.test@example.com",
+				Age:      123,
+				Balance:  13579000,
+			},
+			// [Password: "password"] がマスクされていること（SECRETになっていること）が期待値。
+			expected: "{\"username\":\"John Doe\",\"password\":\"[SECRET]\",\"email\":\"this.is.test@example.com\",\"age\":123,\"balance\":13579000}",
+		},
+	}
+
+	for i := range testCases {
+		tc := testCases[i]
+
+		t.Run(tc.name, func(t *testing.T) {
+			// Arrange
+
+			// Act
+			expected := tc.input.MustMasedJSONString()
+
+			// Assert
+			require.Equal(t, expected, tc.expected)
+		})
+	}
+}
+
 func addAuthMock(manager auth.MockUuidSessionManager, querier *mockdb.MockQuerier, userID int64) {
 	uuid := uuid.New()
 	manager.Uuid = uuid
