@@ -25,9 +25,12 @@ type createUserRequest struct {
 	Balance  int64  `json:"balance"`
 }
 
-// 出力用のJSONを取得する。
-func (request createUserRequest) MustJSONString() string {
-	bytes, err := json.Marshal(request)
+// Log用にパスワードをマスクした構造体をJSONの文字列で取得する。
+func (request createUserRequest) MustMasedJSONString() string {
+	type credentials createUserRequest
+	cr := credentials(request)
+	cr.Password = "[SECRET]"
+	bytes, err := json.Marshal((*credentials)(&cr))
 	if err != nil {
 		return ""
 	}
@@ -51,9 +54,12 @@ type loginUserRequest struct {
 	Email    string `json:"email" binding:"required,email"`
 }
 
-// 出力用のJSONを取得する。
-func (request loginUserRequest) MustJSONString() string {
-	bytes, err := json.Marshal(request)
+// Log用にパスワードをマスクした構造体をJSONの文字列で取得する。
+func (request loginUserRequest) MustMasedJSONString() string {
+	type credentials loginUserRequest
+	cr := credentials(request)
+	cr.Password = "[SECRET]"
+	bytes, err := json.Marshal((*credentials)(&cr))
 	if err != nil {
 		return ""
 	}
@@ -69,7 +75,7 @@ func (server *Server) createUser(c *gin.Context) {
 	}
 
 	// MAYBE: これはDebugかInfoか。
-	zap.S().Debug(req.MustJSONString())
+	zap.S().Debug(req.MustMasedJSONString())
 
 	// Emailが登録されているかチェックする。
 	_, err := server.querier.GetUser(c, req.Email)
@@ -165,7 +171,7 @@ func (server *Server) loginUser(c *gin.Context) {
 	}
 
 	// MAYBE: これはDebugかInfoか。
-	zap.S().Debug(req.MustJSONString())
+	zap.S().Debug(req.MustMasedJSONString())
 
 	// Emailが登録されているかチェックする。
 	user, err := server.querier.GetUser(c, req.Email)
